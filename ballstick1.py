@@ -41,7 +41,9 @@ class BallAndStick:
         return 'BallAndStick[{}]'.format(self._gid)
 
 my_cell = BallAndStick(0)
-my_cell = BallAndStick(0)
+
+print(my_cell.soma(0.5).area())
+print(h.topology())
 
 import matplotlib.pyplot as plt
 
@@ -53,6 +55,8 @@ from neuron import gui
 # here: True means show using NEURON's GUI; False means do not do so, at least not at first
 ps = h.PlotShape(True)
 ps.show(0)
+
+print(h.units('gnabar_hh'))
 
 for sec in h.allsec():
     print('%s: %s' % (sec, ', '.join(sec.psection()['density_mechs'].keys())))
@@ -74,8 +78,23 @@ h.finitialize(-65 * mV)
 
 h.continuerun(25 * ms)
 
+plt.figure()
+plt.plot(t, soma_v)
+plt.xlabel='t (ms)'
+plt.ylabel='v (mV)'
+plt.show()
 
-#%%
+
+f = plt.figure(x_axis_label='t (ms)', y_axis_label='v (mV)')
+amps = [0.075 * i for i in range(1, 5)]
+colors = ['green', 'blue', 'red', 'black']
+for amp, color in zip(amps, colors):
+    stim.amp = amp
+    h.finitialize(-65 * mV)
+    h.continuerun(25 * ms)
+    f.line(t, list(soma_v), line_width=2, legend_label='amp=%g' % amp, color=color)
+plt.show(f)
+
 
 dend_v = h.Vector().record(my_cell.dend(0.5)._ref_v)
 f = plt.figure()
@@ -91,4 +110,22 @@ for amp, color in zip(amps, colors):
     f.plot(t, list(soma_v), line_width=2, legend_label='amp=%g' % amp, color=color)
     f.plot(t, list(dend_v), line_width=2, line_dash='dashed', color=color)
 
+plt.show(f)
+
+f = plt.figure(x_axis_label='t (ms)', y_axis_label='v (mV)')
+amps = [0.075 * i for i in range(1, 5)]
+colors = ['green', 'blue', 'red', 'black']
+for amp, color in zip(amps, colors):
+    stim.amp = amp
+    for my_cell.dend.nseg, width in [(1, 2), (101, 1)]:
+        h.finitialize(-65)
+        h.continuerun(25)
+        f.line(t, list(soma_v),
+               line_width=width,
+               legend_label='amp=%g' % amp if my_cell.dend.nseg == 1 else None,
+               color=color)
+        f.line(t, list(dend_v),
+               line_width=width,
+               line_dash='dashed',
+               color=color)
 plt.show(f)
